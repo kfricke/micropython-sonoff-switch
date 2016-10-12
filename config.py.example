@@ -1,0 +1,15 @@
+#!!! Edit this file and rename/copy it to "config.py"
+
+# WLAN Configuration
+WLAN_SSID = '<your WLAN SSID>'
+WLAN_PSK = '<your WLAN pre-shared-key>'
+
+# MQTT Configuration
+BROKER = '<your MQTT broker IP addrees or DNS name>'
+CLIENT_ID_PREFIX = 'sonoff_switch'
+LOG_TOPIC_PREFIX = 'logs/{}/'.format(CLIENT_ID_PREFIX)
+LAST_WILL = 'Sorry, got to go without notice. See you soon!'
+ACTUATOR_BASE_TOPIC = '/actuators/{}/'.format(CLIENT_ID_PREFIX)
+
+# Software Settings
+LED_DISPLAY_RELAY_STATE = True
