@@ -6,7 +6,6 @@ import network
 
 from umqtt.robust import MQTTClient
 from usched import Sched
-
 from pushbutton import Pushbutton
 import config
 
@@ -30,7 +29,7 @@ _PUSHBUTTON_DESCRIPTOR = {
 led = machine.Pin(_PIN_LED, machine.Pin.OUT)
 relay = machine.Pin(_PIN_RELAY, machine.Pin.OUT)
 
-demanded_relay_state = None
+demanded_relay_state = True
 
 def handle_subscription(topic, payload):
     global demanded_relay_state
@@ -85,13 +84,13 @@ if not wlan.isconnected():
         if utime.ticks_diff(cstart_ms, utime.ticks_ms()) > 10000:
             print('Connecting to WLAN timed out. Resetting!')
             machine.reset()
+mac_address = ubinascii.hexlify(wlan.config('mac')).decode('utf-8')
 
 print('Connecting to MQTT broker')
-mac_address = ubinascii.hexlify(wlan.config('mac')).decode('utf-8')
-client = MQTTClient(config.CLIENT_ID_PREFIX + mac_address, config.BROKER)
-client.set_callback(handle_subscription)
-client.set_last_will(config.LOG_TOPIC_PREFIX, config.LAST_WILL)
 try:
+    client = MQTTClient(config.CLIENT_ID_PREFIX + mac_address, config.BROKER)
+    client.set_callback(handle_subscription)
+    client.set_last_will(config.LOG_TOPIC_PREFIX, config.LAST_WILL)
     client.connect()
 except KeyboardInterrupt:
     raise
