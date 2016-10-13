@@ -7,6 +7,7 @@ import network
 from umqtt.robust import MQTTClient
 from usched import Sched
 
+from pushbutton import Pushbutton
 import config
 
 _PIN_PUSHBUTTON = const(0)
@@ -17,9 +18,17 @@ _DELAY_MS = 20
 _CLIENT_ID = None
 _ACTUATOR_TOPIC = None
 
+_PUSHBUTTON_DESCRIPTOR = {
+        'no': True,
+        'grounded': True,
+        'pull': machine.Pin.PULL_UP,
+        'debounce': 0.02,
+        'long_press_time': 1,
+        'double_click_time': 0.4
+        }
+
 led = machine.Pin(_PIN_LED, machine.Pin.OUT)
 relay = machine.Pin(_PIN_RELAY, machine.Pin.OUT)
-button = machine.Pin(_PIN_PUSHBUTTON, machine.Pin.IN)
 
 demanded_relay_state = None
 
@@ -61,6 +70,10 @@ def led_copies_relay_state(led, relay):
             led.value(relay.value())
         yield 0.1
 
+def pushbutton_pressed(client, topic):
+    global demanded_relay_state
+    client.publish(topic, ujson.dumps({'state': demanded_relay_state}))
+
 print('Connecting to WLAN...')
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
@@ -101,6 +114,13 @@ scheduler.add_thread(loose_some_time(_DELAY_MS))
 scheduler.add_thread(relay_control(relay))
 if config.LED_DISPLAY_RELAY_STATE:
     scheduler.add_thread(led_copies_relay_state(led, relay))
+pushbutton = Pushbutton(
+        scheduler,
+        _PIN_PUSHBUTTON,
+        _PUSHBUTTON_DESCRIPTOR,
+        true_func=pushbutton_pressed,
+        true_func_args=(client, _ACTUATOR_TOPIC)
+        )
 print("Starting Scheduler...")
 scheduler.run()
 
